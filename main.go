@@ -1,17 +1,49 @@
 package main
 
 import (
-	"fmt"
+	"errors"
+	"flag"
+	"os"
+	"time"
 
-	"github.com/valyala/fasthttp"
+	Config "github.com/daniil-oliynyk/gobalancer/config"
+
+	"github.com/rs/zerolog"
 )
-
-func fastHTTPHandler(ctx *fasthttp.RequestCtx) {
-	fmt.Fprintf(ctx, "Hi there! RequestURI is %q", ctx.RequestURI())
-}
 
 func main() {
 
-	fasthttp.ListenAndServe(":8081", fastHTTPHandler)
+	logger := zerolog.New(zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.DateTime}).
+		Level(zerolog.TraceLevel).
+		With().
+		Timestamp().
+		Caller().
+		Logger()
+
+	configFilePath := flag.String("config", "./config.yaml", "use absolute path for config file")
+	flag.Parse()
+
+	if *configFilePath == "" {
+		logger.Error().Msg("Provide a file path for the config file")
+		return
+	}
+
+	if _, err := os.Stat(*configFilePath); errors.Is(err, os.ErrNotExist) {
+		logger.Error().Msgf("Config file does not exist at path %s", *configFilePath)
+	}
+
+	logger.Info().Msg("Config file opened")
+
+	config, err := Config.ReadConfigFile(*configFilePath)
+	if err != nil {
+		logger.Err(err).Msgf("Failed to read config file at %s", *configFilePath)
+	}
+
+	logger.Info().Msg("Config file read, now validating")
+
+	err = config.ValidateConfig()
+	if err != nil {
+		logger.Err(err)
+	}
 
 }
