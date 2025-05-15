@@ -62,7 +62,7 @@ func main() {
 	// start loadbalancer
 	loadBalancerServer := fasthttp.Server{
 		Logger:       &logger,
-		Handler:      handler,
+		Handler:      handler.Serve(),
 		ReadTimeout:  config.Server.ReadTimeout,
 		WriteTimeout: config.Server.WriteTimeout,
 		IdleTimeout:  config.Server.IdleTimeout,

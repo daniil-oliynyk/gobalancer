@@ -2,13 +2,10 @@ package main
 
 import (
 	"github.com/daniil-oliynyk/gobalancer/config"
+	"github.com/daniil-oliynyk/gobalancer/interfaces"
 	"github.com/daniil-oliynyk/gobalancer/utils"
 	"github.com/valyala/fasthttp"
 )
-
-type IBackend interface {
-	ProxyHandler(ctx *fasthttp.RequestCtx) error
-}
 
 type Backend struct {
 	proxy *fasthttp.HostClient
@@ -43,7 +40,7 @@ func (b *Backend) PrepareRequest(req *fasthttp.Request, clientIP []byte) {
 	req.Header.SetBytesKV([]byte("X-Forwarded-For"), clientIP)
 }
 
-func NewBackend(backend config.Backend) IBackend {
+func NewBackend(backend config.Backend) interfaces.IBackend {
 	// More fields can be added later in config such as MaxConns
 	proxyHostClient := &fasthttp.HostClient{
 		Addr: backend.Url,
